@@ -372,16 +372,7 @@
         function renderBuildings() {
             const grid = document.getElementById('buildings-grid');
             
-            if (buildings.length === 0) {
-                grid.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-icon">🏛️</div>
-                        <h3>No Buildings Loaded</h3>
-                        <p>Check that each folder has info.json</p>
-                    </div>
-                `;
-                return;
-            }
+            
             
             grid.innerHTML = buildings.map(building => `
                 <div class="building-card">
