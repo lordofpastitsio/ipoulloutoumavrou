@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Cyprus AR Heritage - Custom Buildings</title>
+    <title>Cyprus AR Heritage</title>
     <style>
         * {
             margin: 0;
@@ -12,93 +12,156 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+            background: #000;
             overflow: hidden;
-            background: black;
         }
 
-        .ar-scene {
+        /* Camera view */
+        #camera-view {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
+            object-fit: cover;
+            z-index: 1;
+        }
+
+        /* AR Canvas */
+        #ar-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
         }
 
         /* UI Overlay */
-        .info-panel {
+        .ui-overlay {
             position: fixed;
-            bottom: 20px;
-            left: 20px;
-            right: 20px;
-            background: rgba(0,0,0,0.9);
-            backdrop-filter: blur(20px);
-            border-radius: 20px;
-            padding: 16px;
-            z-index: 100;
-            border-left: 4px solid #FFD700;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 10;
+            padding: 20px;
+            background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
             pointer-events: none;
         }
 
-        .info-panel h2 {
+        .info-card {
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 20px;
+            margin-bottom: 16px;
+            border: 1px solid rgba(255,215,0,0.3);
+            transform: translateY(0);
+            transition: all 0.3s ease;
+            pointer-events: auto;
+        }
+
+        .info-card h1 {
             color: #FFD700;
             font-size: 20px;
+            font-weight: 600;
             margin-bottom: 8px;
         }
 
-        .info-panel p {
-            color: white;
+        .info-card p {
+            color: rgba(255,255,255,0.9);
             font-size: 14px;
             line-height: 1.5;
         }
 
-        .info-panel .meta {
+        .info-card .badge {
+            display: inline-block;
+            background: rgba(255,215,0,0.2);
             color: #FFD700;
+            padding: 4px 12px;
+            border-radius: 20px;
             font-size: 12px;
-            margin-top: 8px;
+            margin-top: 10px;
         }
 
-        .chat-button {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: #2563eb;
+        /* Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            pointer-events: auto;
+        }
+
+        .btn {
+            width: 52px;
+            height: 52px;
+            border-radius: 26px;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.2);
             color: white;
-            border: none;
-            border-radius: 50%;
-            width: 56px;
-            height: 56px;
             font-size: 24px;
             cursor: pointer;
-            z-index: 101;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            pointer-events: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
         }
 
-        .chat-panel {
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        .btn-primary {
+            background: #2563eb;
+            border: none;
+        }
+
+        /* Chat Modal */
+        .chat-modal {
             position: fixed;
-            bottom: 90px;
-            right: 20px;
-            width: 320px;
-            height: 460px;
-            background: white;
-            border-radius: 20px;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            top: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 20;
             display: none;
+            align-items: flex-end;
+            backdrop-filter: blur(10px);
+        }
+
+        .chat-container {
+            background: white;
+            border-radius: 24px 24px 0 0;
+            height: 70%;
+            width: 100%;
+            display: flex;
             flex-direction: column;
-            z-index: 102;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
             overflow: hidden;
-            pointer-events: auto;
         }
 
         .chat-header {
-            background: #2563eb;
-            color: white;
-            padding: 16px;
-            font-weight: bold;
+            padding: 20px;
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
             display: flex;
             justify-content: space-between;
             align-items: center;
+        }
+
+        .chat-header h3 {
+            font-size: 18px;
+            color: #1f2937;
+        }
+
+        .close-chat {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #6b7280;
         }
 
         .chat-messages {
@@ -111,10 +174,10 @@
         .message {
             margin-bottom: 12px;
             padding: 10px 14px;
-            border-radius: 16px;
+            border-radius: 18px;
             max-width: 85%;
-            word-wrap: break-word;
             font-size: 14px;
+            line-height: 1.4;
         }
 
         .message.user {
@@ -124,22 +187,23 @@
         }
 
         .message.bot {
-            background: #e5e7eb;
+            background: white;
             color: #1f2937;
+            border: 1px solid #e5e7eb;
         }
 
         .chat-input {
-            display: flex;
-            padding: 12px;
-            gap: 8px;
+            padding: 16px;
             background: white;
             border-top: 1px solid #e5e7eb;
+            display: flex;
+            gap: 12px;
         }
 
         .chat-input input {
             flex: 1;
-            padding: 10px 14px;
-            border: 1px solid #d1d5db;
+            padding: 12px 16px;
+            border: 1px solid #e5e7eb;
             border-radius: 24px;
             outline: none;
             font-size: 14px;
@@ -150,269 +214,339 @@
             color: white;
             border: none;
             border-radius: 24px;
-            padding: 10px 20px;
+            padding: 12px 20px;
             cursor: pointer;
+            font-weight: 500;
         }
 
-        .status {
+        /* Camera permission prompt */
+        .permission-prompt {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: black;
+            z-index: 30;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .permission-card {
+            background: white;
+            border-radius: 24px;
+            padding: 32px;
+            text-align: center;
+            max-width: 300px;
+        }
+
+        .permission-card h2 {
+            font-size: 24px;
+            margin-bottom: 12px;
+        }
+
+        .permission-card p {
+            color: #6b7280;
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+
+        .permission-card button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 30px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        /* Status */
+        .status-bar {
             position: fixed;
             top: 20px;
             left: 20px;
             right: 20px;
-            background: rgba(0,0,0,0.7);
+            background: rgba(0,0,0,0.6);
             backdrop-filter: blur(10px);
-            border-radius: 12px;
-            padding: 10px;
-            text-align: center;
-            z-index: 100;
-            color: #FFD700;
+            border-radius: 30px;
+            padding: 8px 16px;
+            z-index: 10;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             font-size: 12px;
+            color: #FFD700;
             pointer-events: none;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
         }
 
         @keyframes pulse {
             0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+            50% { opacity: 0.3; }
         }
 
-        .ar-ready {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            width: 10px;
-            height: 10px;
-            background: #10b981;
-            border-radius: 50%;
-            animation: pulse 2s infinite;
-            z-index: 100;
+        .hidden {
+            display: none;
         }
     </style>
 </head>
 <body>
-    <div class="ar-scene">
-        <a-scene id="ar-scene" embedded arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix;">
-            
-            <!-- ============================================ -->
-            <!-- YOUR BUILDINGS GO HERE - EDIT THIS SECTION    -->
-            <!-- ============================================ -->
-            
-            <!-- 
-            HOW TO ADD A BUILDING:
-            1. Copy this entire block
-            2. Change the marker number (must be unique: 0,1,2,3,4,5...)
-            3. Add your 3D model inside the <a-marker> tags
-            4. Add your text labels
-            
-            IMPORTANT: Each building MUST have a UNIQUE marker number
-            -->
-            
-            <!-- BUILDING 1 - EXAMPLE STRUCTURE (Replace with your model) -->
-            <a-marker type="barcode" value="0">
-                <!-- === YOUR 3D MODEL GOES HERE === -->
-                <!-- Replace this box with your actual 3D model -->
-                <a-box position="0 0.5 0" width="1" height="1" depth="1" color="#C4A35A"></a-box>
-                
-                <!-- Model title label -->
-                <a-text value="YOUR BUILDING NAME" 
-                        position="0 1.3 0" 
-                        color="#FFD700" 
-                        align="center" 
-                        scale="0.6 0.6 0.6">
-                </a-text>
-                
-                <!-- Subtitle label -->
-                <a-text value="Year / Period" 
-                        position="0 1.0 0" 
-                        color="white" 
-                        align="center" 
-                        scale="0.4 0.4 0.4">
-                </a-text>
-            </a-marker>
-            
-            <!-- BUILDING 2 -->
-            <a-marker type="barcode" value="1">
-                <!-- YOUR 3D MODEL FOR BUILDING 2 -->
-                <a-box position="0 0.5 0" width="1" height="1" depth="1" color="#A0522D"></a-box>
-                
-                <a-text value="BUILDING 2 NAME" 
-                        position="0 1.3 0" 
-                        color="#FFD700" 
-                        align="center" 
-                        scale="0.6 0.6 0.6">
-                </a-text>
-            </a-marker>
-            
-            <!-- BUILDING 3 -->
-            <a-marker type="barcode" value="2">
-                <!-- YOUR 3D MODEL FOR BUILDING 3 -->
-                <a-box position="0 0.5 0" width="1" height="1" depth="1" color="#DEB887"></a-box>
-                
-                <a-text value="BUILDING 3 NAME" 
-                        position="0 1.3 0" 
-                        color="#FFD700" 
-                        align="center" 
-                        scale="0.6 0.6 0.6">
-                </a-text>
-            </a-marker>
-            
-            <!-- ============================================ -->
-            <!-- ADD MORE BUILDINGS HERE - Copy the block above -->
-            <!-- Just change value="0" to value="3", "4", "5" etc -->
-            <!-- ============================================ -->
-            
-            <a-entity camera></a-entity>
-        </a-scene>
-    </div>
 
-    <!-- Info Panel - Shows description when building is detected -->
-    <div class="info-panel" id="infoPanel">
-        <h2 id="buildingName">🏛️ Cyprus Heritage AR</h2>
-        <p id="buildingDesc">Point your camera at barcode markers (0, 1, 2...) to see your 3D buildings</p>
-        <div class="meta" id="buildingMeta">Ready for your custom buildings</div>
-    </div>
+    <!-- Camera Feed -->
+    <video id="camera-view" autoplay playsinline muted></video>
+    <canvas id="ar-canvas"></canvas>
 
-    <div class="status">
-        📍 AR Active | Show barcode markers to your camera
-    </div>
-    <div class="ar-ready"></div>
-
-    <button class="chat-button" id="chatButton">💬</button>
-
-    <div class="chat-panel" id="chatPanel">
-        <div class="chat-header">
-            <span>🏛️ AI Heritage Guide</span>
-            <button id="closeChat" style="background: none; border: none; color: white; font-size: 24px; cursor: pointer;">✕</button>
+    <!-- UI Overlay -->
+    <div class="ui-overlay">
+        <div class="info-card" id="info-card">
+            <h1 id="building-title">🏛️ Cyprus Heritage AR</h1>
+            <p id="building-description">Point camera at a marker to see historical buildings</p>
+            <span class="badge" id="building-badge">Ready</span>
         </div>
-        <div class="chat-messages" id="messages">
-            <div class="message bot">
-                👋 Hello! Ask me about the historical buildings you've added to this AR guide!
+        <div class="action-buttons">
+            <button class="btn" id="chat-btn">💬</button>
+        </div>
+    </div>
+
+    <!-- Status Bar -->
+    <div class="status-bar">
+        <span>📍 AR Ready</span>
+        <div class="status-dot"></div>
+    </div>
+
+    <!-- Chat Modal -->
+    <div class="chat-modal" id="chat-modal">
+        <div class="chat-container">
+            <div class="chat-header">
+                <h3>🏛️ Heritage Guide AI</h3>
+                <button class="close-chat" id="close-chat">✕</button>
+            </div>
+            <div class="chat-messages" id="chat-messages">
+                <div class="message bot">Hello! Ask me about Cyprus's historical buildings! 🏺</div>
+            </div>
+            <div class="chat-input">
+                <input type="text" id="chat-input" placeholder="Ask something...">
+                <button id="send-chat">Send</button>
             </div>
         </div>
-        <div class="chat-input">
-            <input type="text" id="question" placeholder="Ask about a building...">
-            <button id="send">Send</button>
+    </div>
+
+    <!-- Permission Prompt -->
+    <div class="permission-prompt" id="permission-prompt">
+        <div class="permission-card">
+            <h2>📷 Camera Access</h2>
+            <p>This app needs camera access to show AR historical buildings</p>
+            <button id="enable-camera">Enable Camera</button>
         </div>
     </div>
 
-    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/ar.js@2.3.3/aframe/build/aframe-ar.min.js"></script>
-    
     <script>
         // ============================================
-        // YOUR BUILDING DATA - EDIT THIS SECTION
+        // YOUR BUILDING DATA - EDIT THIS
         // ============================================
         
-        const buildingsData = {
-            // Each marker number must match the ones in your HTML above
-            0: {
-                name: "🏰 Your Building Name Here",
-                period: "Year / Historical Period",
-                description: "Write your building's historical description here. Add fascinating facts, architectural details, and historical significance.",
-                aiContext: "This is the information the AI will use to answer questions about this building."
+        const BUILDINGS = {
+            // Marker ID: { title, description, period }
+            "marker_0": {
+                title: "Limassol Castle",
+                description: "Medieval castle built in the 13th century. Richard the Lionheart married Berengaria of Navarre here in 1191.",
+                period: "13th Century"
             },
-            1: {
-                name: "🏛️ Second Building Name",
-                period: "Construction Date",
-                description: "Description of your second building. Make it detailed so the AI can answer questions.",
-                aiContext: "Context for AI about this specific building."
+            "marker_1": {
+                title: "Kolossi Castle",
+                description: "Crusader stronghold built in 1210 by the Knights of St. John. Famous for Commandaria wine production.",
+                period: "1210 AD"
             },
-            2: {
-                name: "⛪ Third Building Name",
-                period: "Historical Period",
-                description: "Description of your third building with historical details.",
-                aiContext: "Context for AI about this building."
+            "marker_2": {
+                title: "Amathus",
+                description: "Ancient city-kingdom founded around 1100 BC. Major cult center for Aphrodite.",
+                period: "1100 BC"
+            },
+            "marker_3": {
+                title: "Kourion",
+                description: "Greco-Roman city with spectacular amphitheater overlooking the Mediterranean.",
+                period: "2nd Century BC"
+            },
+            "marker_4": {
+                title: "St. Lazarus Church",
+                description: "9th-century Byzantine church built over the tomb of Lazarus.",
+                period: "890 AD"
             }
-            // Add more buildings here with marker numbers 3, 4, 5, etc.
         };
 
         // ============================================
-        // AR DETECTION - Shows info when marker found
+        // CAMERA SETUP
         // ============================================
         
-        let currentBuilding = null;
+        let stream = null;
+        let detector = null;
+        let isScanning = false;
+
+        async function initCamera() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: "environment" }  // Use back camera
+                });
+                
+                const video = document.getElementById('camera-view');
+                video.srcObject = stream;
+                await video.play();
+                
+                document.getElementById('permission-prompt').classList.add('hidden');
+                startARDetection();
+                
+            } catch (err) {
+                console.error('Camera error:', err);
+                document.getElementById('building-description').innerHTML = '❌ Camera access denied. Please allow camera access.';
+            }
+        }
+
+        // ============================================
+        // SIMPLE MARKER DETECTION (No external libs)
+        // ============================================
         
-        // Listen for markers being detected
-        const markers = document.querySelectorAll('a-marker');
-        markers.forEach(marker => {
-            marker.addEventListener('markerFound', () => {
-                const markerValue = marker.getAttribute('value');
-                if (markerValue && buildingsData[markerValue]) {
-                    currentBuilding = markerValue;
-                    updateInfoPanel(buildingsData[markerValue]);
+        function startARDetection() {
+            const video = document.getElementById('camera-view');
+            const canvas = document.getElementById('ar-canvas');
+            const ctx = canvas.getContext('2d');
+            
+            isScanning = true;
+            
+            function detect() {
+                if (!isScanning) return;
+                
+                if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    
+                    // Simulate marker detection with random for demo
+                    // Replace this with actual marker detection logic
+                    simulateMarkerDetection();
                 }
-            });
-        });
+                
+                requestAnimationFrame(detect);
+            }
+            
+            detect();
+        }
 
-        function updateInfoPanel(building) {
-            document.getElementById('buildingName').textContent = building.name;
-            document.getElementById('buildingDesc').textContent = building.description;
-            document.getElementById('buildingMeta').textContent = building.period;
+        // Simulate detection - REPLACE with actual marker detection
+        let lastMarker = null;
+        function simulateMarkerDetection() {
+            // For demo: Cycle through markers every 5 seconds
+            // REPLACE THIS with actual computer vision detection
+            const markers = Object.keys(BUILDINGS);
+            const randomMarker = markers[Math.floor(Math.random() * markers.length)];
+            
+            if (randomMarker !== lastMarker) {
+                lastMarker = randomMarker;
+                showBuildingInfo(BUILDINGS[randomMarker]);
+            }
+        }
+
+        function showBuildingInfo(building) {
+            document.getElementById('building-title').textContent = `🏛️ ${building.title}`;
+            document.getElementById('building-description').textContent = building.description;
+            document.getElementById('building-badge').textContent = building.period;
+            
+            // Add animation
+            const card = document.querySelector('.info-card');
+            card.style.transform = 'translateY(10px)';
+            setTimeout(() => {
+                card.style.transform = 'translateY(0)';
+            }, 200);
         }
 
         // ============================================
-        // AI CHAT - Uses your building data
+        // CHAT FUNCTIONALITY
         // ============================================
         
-        const chatButton = document.getElementById('chatButton');
-        const chatPanel = document.getElementById('chatPanel');
-        const closeChat = document.getElementById('closeChat');
-        const sendBtn = document.getElementById('send');
-        const questionInput = document.getElementById('question');
-        const messagesDiv = document.getElementById('messages');
-
-        chatButton.onclick = () => {
-            chatPanel.style.display = chatPanel.style.display === 'flex' ? 'none' : 'flex';
+        const knowledgeBase = {
+            "limassol castle": "Limassol Castle was built in the 13th century by the Lusignans. It's famous as the location where Richard the Lionheart married Berengaria of Navarre in 1191. Today it houses the Cyprus Medieval Museum.",
+            "kolossi castle": "Kolossi Castle is a Crusader fortress built in 1210 by the Knights of St. John. It's known for producing Commandaria, one of the world's oldest wines.",
+            "amathus": "Amathus was an ancient city-kingdom founded around 1100 BC. It was a major center for the worship of Aphrodite and was destroyed by Richard the Lionheart in 1180 AD.",
+            "kourion": "Kourion is a Greco-Roman city with a stunning amphitheater overlooking the sea. It features beautiful mosaics and was an important city from the 2nd century BC until the 7th century AD.",
+            "st. lazarus": "The Church of St. Lazarus was built in 890 AD over the tomb of Lazarus. It's one of Cyprus's most important pilgrimage sites and features beautiful Byzantine architecture."
         };
-
-        closeChat.onclick = () => {
-            chatPanel.style.display = 'none';
-        };
-
-        function addMessage(text, sender) {
-            const msg = document.createElement('div');
-            msg.className = `message ${sender}`;
-            msg.textContent = text;
-            messagesDiv.appendChild(msg);
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;
-        }
-
-        // Build knowledge base from your data
+        
         function getAIResponse(question) {
             const q = question.toLowerCase();
             
-            // Check if asking about specific building
-            for (const [id, building] of Object.entries(buildingsData)) {
-                const buildingName = building.name.toLowerCase();
-                if (q.includes(buildingName) || q.includes(buildingName.replace('🏰', '').replace('🏛️', '').replace('⛪', '').trim().toLowerCase())) {
-                    return `${building.name}\n\n${building.description}\n\n📅 ${building.period}`;
+            for (const [key, answer] of Object.entries(knowledgeBase)) {
+                if (q.includes(key)) {
+                    return answer;
                 }
             }
             
-            // General response if no specific building matched
-            const buildingList = Object.values(buildingsData).map(b => b.name).join(', ');
-            return `🏛️ I can tell you about the buildings you've added: ${buildingList}\n\nWhich one would you like to learn about?`;
+            return "🏛️ I can tell you about: Limassol Castle, Kolossi Castle, Amathus, Kourion, or St. Lazarus Church. Which would you like to learn about?";
         }
 
-        sendBtn.onclick = async () => {
-            const question = questionInput.value.trim();
+        // Chat UI
+        const chatModal = document.getElementById('chat-modal');
+        const chatBtn = document.getElementById('chat-btn');
+        const closeChat = document.getElementById('close-chat');
+        const sendBtn = document.getElementById('send-chat');
+        const chatInput = document.getElementById('chat-input');
+        const chatMessages = document.getElementById('chat-messages');
+
+        chatBtn.onclick = () => {
+            chatModal.style.display = 'flex';
+        };
+
+        closeChat.onclick = () => {
+            chatModal.style.display = 'none';
+        };
+
+        function addMessage(text, sender) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message ${sender}`;
+            msgDiv.textContent = text;
+            chatMessages.appendChild(msgDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        sendBtn.onclick = () => {
+            const question = chatInput.value.trim();
             if (!question) return;
             
             addMessage(question, 'user');
-            questionInput.value = '';
-            addMessage('📜 Searching heritage records...', 'bot');
+            chatInput.value = '';
             
             setTimeout(() => {
-                messagesDiv.removeChild(messagesDiv.lastChild);
                 const answer = getAIResponse(question);
                 addMessage(answer, 'bot');
-            }, 500);
+            }, 300);
         };
 
-        questionInput.onkeypress = (e) => {
+        chatInput.onkeypress = (e) => {
             if (e.key === 'Enter') sendBtn.onclick();
         };
+
+        // ============================================
+        // INIT
+        // ============================================
         
-        console.log('✅ App ready! Add your 3D models and building data to buildingsData object');
+        document.getElementById('enable-camera').onclick = initCamera;
+        
+        // Check if camera is already available
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            // Wait for user interaction (browser policy)
+            console.log('Ready - click Enable Camera');
+        } else {
+            document.getElementById('permission-prompt').innerHTML = '<div class="permission-card"><h2>⚠️ Not Supported</h2><p>Your browser doesn\'t support camera access. Try Chrome or Safari.</p></div>';
+        }
     </script>
 </body>
 </html>
