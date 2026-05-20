@@ -332,21 +332,7 @@
         async function loadBuildings() {
             const grid = document.getElementById('buildings-grid');
             
-            if (buildingFolders.length === 0) {
-                grid.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-icon">📁</div>
-                        <h3>No Buildings Yet</h3>
-                        <p>Add building folders to the models/ directory</p>
-                        <p style="font-size:12px; margin-top:16px; font-family:monospace;">
-                            models/your-building/info.json<br>
-                            models/your-building/model.glb<br>
-                            models/your-building/photo.jpg
-                        </p>
-                    </div>
-                `;
-                return;
-            }
+            
 
             grid.innerHTML = '<div class="loading-state"><div class="loading-spinner"></div><p>Loading buildings...</p></div>';
             
